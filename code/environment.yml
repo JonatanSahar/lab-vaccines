@@ -1,0 +1,4 @@
+name: vaccines
+channels:
+  - conda-forge
+prefix: /home/yonatan/miniforge3/envs/vaccines
