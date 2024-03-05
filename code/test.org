@@ -1,0 +1,16 @@
+#+PROPERTY: header-args:jupyter-python :session foo :kernel jupyter-emacs
+#+PROPERTY: header-args:jupyter-python+ :async yes
+#+title: Test
+
+#+begin_src jupyter-python
+x = 5
+#+end_src
+
+#+RESULTS:
+: 0 - 3a79f872-e9c8-46e9-9394-3a8fa284a32e
+
+#+begin_src jupyter-python
+print(f"x = {x}")
+#+end_src
+
+#+RESULTS:
