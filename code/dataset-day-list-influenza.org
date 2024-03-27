@@ -1,0 +1,13 @@
+"Dataset": "GSE125921.SDY1529", "Days" : ["D0", "FC", "D84"], "Day0": "D0"
+"Dataset": "GSE41080.SDY212", "Days" : ["HAI.D0", "FC.HAI", "HAI.D28"], "Day0": "HAI.D0"
+"Dataset": "GSE45735.SDY224", "Days" : ["HAI.D0", "FC.HAI", "HAI.D21"], "Day0": "HAI.D0"
+"Dataset": "GSE47353.SDY80", "Days" : ["D70.nAb", "FC.D70.nAb", "D0.nAb"], "Day0":  "D0.nAb"
+"Dataset": "GSE48018.SDY1276", "Days" : ["HAI.D28", "HAI.D0", "HAI.FC"], "Day0":  "HAI.D0"
+"Dataset": "GSE48023.SDY1276", "Days" : ["HAI.FC", "HAI.D28", "HAI.D0"], "Day0":  "HAI.D0"
+"Dataset": "GSE59635.SDY63", "Days" : ["FC", "HAI.D0", "HAI.D28"], "Day0":  "HAI.D0"
+"Dataset": "GSE59654.SDY404", "Days" : ["HAI.D28", "HAI.D0", "FC.HAI"], "Day0":  "HAI.D0"
+"Dataset": "GSE59743.SDY400", "Days" : ["FC.HAI", "HAI.D28], "Day0": "None"
+"Dataset": "SDY296", "Days" : ["D0.HAI", "D28.HAI", "FC.HAI"], "Day0": "D0.HAI"
+"Dataset": "SDY67", "Days" : ["HAI.D0", "FC.D28.HAI", "HAI.D28"], "Day0": "HAI.D0""
+
+I want to create a dataframe from this data, where each row has a "dataset" column and a "days" column which is a list, and a "Day0" column
