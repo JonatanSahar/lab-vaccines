@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Dataset column names
 dataset_col = "Dataset"
 uid_col = "uid"
 age_col = "Age"
@@ -6,7 +7,10 @@ day_col = "Day"
 response_col = "Response"
 immage_col = "IMMAGE"
 strain_col = "Strain"
+accesion_col = "geo_accession"
+strain_index_col = "strain_index"
 
+# Dataset subsets
 influenza_dicts = [
     {
         "Dataset": "GSE41080.SDY212",
@@ -34,7 +38,7 @@ influenza_dicts = [
     },
     {"Dataset": "SDY67", "Days": ["FC.D28.HAI", "HAI.D28"], "Day0": "HAI.D0", "DayMFC": "HAI.MFC"},
     {"Dataset": "GSE59635.SDY63", "Days": ["FC", "HAI.D28"], "Day0": "HAI.D0", "DayMFC": "HAI.MFC"},
-    # Five subjects only
+    # Has five subjects only
     {
         "Dataset": "GSE45735.SDY224",
         "Days": ["FC.HAI", "HAI.D21"],
@@ -76,3 +80,22 @@ dataset_day_dicts = [
     {"Dataset": "SDY67", "Days": ["nAb.D28", "FC.D28.nAb"]},
     {"Dataset": "SDY89", "Days": ["D28"]},
 ]
+
+exclude_datasets = ["GSE45735.SDY224", "GSE47353.SDY80"]
+
+# Boolean flags
+bAdjustMFC = True
+bDiscardSeroprotected = True
+bOlderOnly = True
+bInfluenza = True
+
+# Configurations
+age_threshlod = 60
+HAI_threshold = 40
+
+if bAdjustMFC:
+    exclude_datasets = ["GSE45735.SDY224", "GSE47353.SDY80", "GSE48023.SDY1276", "SDY296"]
+
+
+age_restrict_str = f"_older-only" if bOlderOnly else ""
+seroprotected_str = f"_discard_seroprotected" if bDiscardSeroprotected else ""
