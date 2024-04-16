@@ -58,35 +58,71 @@ influenza_dicts = [
 ]
 
 dataset_day_dicts = [
-    {"Dataset": "GSE125921.SDY1529", "Days": ["FC", "D84"]},
-    {"Dataset": "GSE13485.SDY1264", "Days": ["D60"]},
-    {"Dataset": "GSE13699.SDY1289", "Days": ["D28"]},
-    {"Dataset": "GSE169159", "Days": ["FC.D42", "D42"]},
-    {"Dataset": "GSE41080.SDY212", "Days": ["HAI.D28"]},
-    {"Dataset": "GSE45735.SDY224", "Days": ["HAI.D21"]},
-    {"Dataset": "GSE47353.SDY80", "Days": ["D70.nAb", "FC.D70.nAb"]},
-    {"Dataset": "GSE48018.SDY1276", "Days": ["nAb.D28", "nAb.FC"]},
-    {"Dataset": "GSE48023.SDY1276", "Days": ["nAb.FC", "nAb.D14"]},
-    {"Dataset": "GSE59635.SDY63", "Days": ["HAI.D28"]},
-    {"Dataset": "GSE59654.SDY180", "Days": ["FC.HAI", "HAI.D28"]},
-    {"Dataset": "GSE59654.SDY404", "Days": ["FC.HAI", "HAI.D28"]},
-    {"Dataset": "GSE59654.SDY520", "Days": ["FC.HAI", "HAI.D28"]},
-    {"Dataset": "GSE59743.SDY400", "Days": ["FC.HAI", "HAI.D28"]},
-    {"Dataset": "GSE65834.SDY1328", "Days": ["D7", "FC"]},
-    {"Dataset": "GSE79396.SDY984", "Days": ["D28", "FC.D28"]},
-    {"Dataset": "GSE82152.SDY1294", "Days": ["D28", "FC"]},
-    {"Dataset": "SDY1325", "Days": ["FC.D28", "D28"]},
-    {"Dataset": "SDY296", "Days": ["D28.nAb", "FC.nAb"]},
-    {"Dataset": "SDY67", "Days": ["nAb.D28", "FC.D28.nAb"]},
-    {"Dataset": "SDY89", "Days": ["D28"]},
+    {"Dataset": "GSE125921.SDY1529", "Days": ["FC", "D84"], "Day0": "FIXME", "DayMFC": "FIXME"},
+    {"Dataset": "GSE13485.SDY1264", "Days": ["D60"], "Day0": "FIXME", "DayMFC": "FIXME"},
+    {"Dataset": "GSE13699.SDY1289", "Days": ["D28"], "Day0": "FIXME", "DayMFC": "FIXME"},
+    {"Dataset": "GSE169159", "Days": ["FC.D42", "D42"], "Day0": "FIXME", "DayMFC": "FIXME"},
+    {"Dataset": "GSE41080.SDY212", "Days": ["HAI.D28"], "Day0": "FIXME", "DayMFC": "FIXME"},
+    {"Dataset": "GSE45735.SDY224", "Days": ["HAI.D21"], "Day0": "FIXME", "DayMFC": "FIXME"},
+    {
+        "Dataset": "GSE47353.SDY80",
+        "Days": ["D70.nAb", "FC.D70.nAb"],
+        "Day0": "FIXME",
+        "DayMFC": "FIXME",
+    },
+    {
+        "Dataset": "GSE48018.SDY1276",
+        "Days": ["nAb.D28", "nAb.FC"],
+        "Day0": "FIXME",
+        "DayMFC": "FIXME",
+    },
+    {
+        "Dataset": "GSE48023.SDY1276",
+        "Days": ["nAb.FC", "nAb.D14"],
+        "Day0": "FIXME",
+        "DayMFC": "FIXME",
+    },
+    {"Dataset": "GSE59635.SDY63", "Days": ["HAI.D28"], "Day0": "FIXME", "DayMFC": "FIXME"},
+    {
+        "Dataset": "GSE59654.SDY180",
+        "Days": ["FC.HAI", "HAI.D28"],
+        "Day0": "FIXME",
+        "DayMFC": "FIXME",
+    },
+    {
+        "Dataset": "GSE59654.SDY404",
+        "Days": ["FC.HAI", "HAI.D28"],
+        "Day0": "FIXME",
+        "DayMFC": "FIXME",
+    },
+    {
+        "Dataset": "GSE59654.SDY520",
+        "Days": ["FC.HAI", "HAI.D28"],
+        "Day0": "FIXME",
+        "DayMFC": "FIXME",
+    },
+    {
+        "Dataset": "GSE59743.SDY400",
+        "Days": ["FC.HAI", "HAI.D28"],
+        "Day0": "FIXME",
+        "DayMFC": "FIXME",
+    },
+    {"Dataset": "GSE65834.SDY1328", "Days": ["D7", "FC"], "Day0": "FIXME", "DayMFC": "FIXME"},
+    {"Dataset": "GSE79396.SDY984", "Days": ["D28", "FC.D28"], "Day0": "FIXME", "DayMFC": "FIXME"},
+    {"Dataset": "GSE82152.SDY1294", "Days": ["D28", "FC"], "Day0": "FIXME", "DayMFC": "FIXME"},
+    {"Dataset": "SDY1325", "Days": ["FC.D28", "D28"], "Day0": "FIXME", "DayMFC": "FIXME"},
+    {"Dataset": "SDY296", "Days": ["D28.nAb", "FC.nAb"], "Day0": "FIXME", "DayMFC": "FIXME"},
+    {"Dataset": "SDY67", "Days": ["nAb.D28", "FC.D28.nAb"], "Day0": "FIXME", "DayMFC": "FIXME"},
+    {"Dataset": "SDY89", "Days": ["D28"], "Day0": "FIXME", "DayMFC": "FIXME"},
 ]
 
 exclude_datasets = ["GSE45735.SDY224", "GSE47353.SDY80"]
 
+
 # Boolean flags
-bAdjustMFC = True
+bAdjustMFC = False
 bDiscardSeroprotected = True
-bOlderOnly = True
+bOlderOnly = False
 bInfluenza = True
 
 # Configurations
