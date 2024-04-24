@@ -144,7 +144,7 @@ exclude_datasets = ["GSE45735.SDY224", "GSE47353.SDY80"]
 
 # Boolean flags
 bAdjustMFC = True
-bDiscardSeroprotected = False
+bDiscardSeroprotected = True
 bOlderOnly = False
 bInfluenza = False
 bNonInfluenza = False
@@ -153,9 +153,6 @@ bNonInfluenza = False
 age_threshlod = 60
 HAI_threshold = 40
 
-# if bAdjustMFC:
-#     exclude_datasets = ["GSE45735.SDY224", "GSE47353.SDY80", "GSE48023.SDY1276", "SDY296"]
-
-
 age_restrict_str = f"_older-only" if bOlderOnly else ""
 seroprotected_str = f"_discard_seroprotected" if bDiscardSeroprotected else ""
+adjFC_str = f"_adjFC" if bAdjustMFC else ""

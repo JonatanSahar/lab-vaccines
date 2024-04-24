@@ -1,0 +1,9 @@
+Dataset,Strain,strain_index,Day,max_difference,"('Composite', 'IMMAGE')","('Composite', 'Age')","('Composite', 'Multivariate')",html_path
+GSE52245.SDY1260,IgG2_serotype_A,2,D30,0.31,0.85,0.55,0.47,"=HYPERLINK(""file:///home/yonatan/Documents/projects/vaccines/code/export/GSE52245.SDY1260_IgG2_serotype_A_D30.html"", ""Link"")"
+GSE169159,WT_SARS-CoV-2,0,D42,0.25,0.70,0.45,0.63,"=HYPERLINK(""file:///home/yonatan/Documents/projects/vaccines/code/export/GSE169159_WT_SARS-CoV-2_D42.html"", ""Link"")"
+GSE52245.SDY1260,IgG_serotype_C,3,D30,0.18,0.61,0.44,0.62,"=HYPERLINK(""file:///home/yonatan/Documents/projects/vaccines/code/export/GSE52245.SDY1260_IgG_serotype_C_D30.html"", ""Link"")"
+GSE52245.SDY1260,IgG2_serotype_C,4,D30,0.18,0.64,0.46,0.46,"=HYPERLINK(""file:///home/yonatan/Documents/projects/vaccines/code/export/GSE52245.SDY1260_IgG2_serotype_C_D30.html"", ""Link"")"
+GSE52245.SDY1260,IgM_serotype_C,0,D30,0.16,0.52,0.36,0.52,"=HYPERLINK(""file:///home/yonatan/Documents/projects/vaccines/code/export/GSE52245.SDY1260_IgM_serotype_C_D30.html"", ""Link"")"
+GSE48023.SDY1276,A_Brisbane_10_2007,0,HAI.D14,0.15,0.57,0.42,0.54,"=HYPERLINK(""file:///home/yonatan/Documents/projects/vaccines/code/export/GSE48023.SDY1276_A_Brisbane_10_2007_HAI.D14.html"", ""Link"")"
+GSE59654.SDY404,A_Perth_16_2009,0,HAI.D28,0.13,0.44,0.66,0.79,"=HYPERLINK(""file:///home/yonatan/Documents/projects/vaccines/code/export/GSE59654.SDY404_A_Perth_16_2009_HAI.D28.html"", ""Link"")"
+GSE59654.SDY404,B_Brisbane_60_2008,1,HAI.D28,0.11,0.55,0.44,0.44,"=HYPERLINK(""file:///home/yonatan/Documents/projects/vaccines/code/export/GSE59654.SDY404_B_Brisbane_60_2008_HAI.D28.html"", ""Link"")"
