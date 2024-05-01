@@ -613,7 +613,7 @@ def analyze_all_datasets(datasets, metadata, bPlotOnly=False, bPlotThreshold=Fal
                         dataset_col: dataset_name,
                         strain_col: strain_name,
                         strain_index_col: strain_index,
-                        day_col: "AdjMFC" if bAdjustMFC else f"{day}",
+                        day_col: day,
                         "bAdjustMFC": bAdjustMFC,
                     }
                     if bPlotOnly:
