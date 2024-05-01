@@ -634,3 +634,73 @@ def analyze_all_datasets(datasets, metadata, bPlotOnly=False, bPlotThreshold=Fal
                     raise (e)
 
     return accumulated_results
+
+#%%
+def load_data():
+    # Read in Data and drop missing values
+    data_dir = af.get_dir_by_name("data")
+    df = pd.read_csv(os.path.join(data_dir, "../data/all_vaccines.csv"))
+    datasets = df.dropna(subset=[immage_col, age_col, dataset_col, uid_col, day_col, response_col])
+    dataset_names = datasets[dataset_col].unique()
+    # Get the info for all influenza datasets, excluding some.
+    influenza_df = pd.DataFrame(influenza_dicts)
+    all_sets_df = pd.DataFrame(dataset_day_dicts_for_adjFC)
+
+    # We can choose to analyze all datasets, only influenza ones and only non-influenza ones
+    if bInfluenza:
+        # Get the info for all influenza datasets, excluding some.
+        metadata = influenza_df
+        dataset_names = metadata[dataset_col].unique().astype(str)
+        dataset_names = list(set(dataset_names) - set(exclude_datasets))
+    elif bNonInfluenza:
+        metadata = all_sets_df
+        dataset_names = all_sets_df[dataset_col].unique().astype(str)
+        dataset_names = list(set(dataset_names) - set(influenza_df[dataset_col]) - set(exclude_datasets))
+    else:
+        metadata = all_sets_df
+        dataset_names = all_sets_df[dataset_col].unique().astype(str)
+        dataset_names = list(set(dataset_names) - set(exclude_datasets))
+
+    # dataset_names = ["GSE48023.SDY1276"]
+    # Filter datasets and metadata according to the list of datasets we want to look at.
+    datasets = datasets.loc[datasets["Dataset"].isin(dataset_names)]
+    metadata =  metadata.loc[metadata["Dataset"].isin(dataset_names)]
+    return datasets, metadata
+
+def debug_single_dataset(datasets, metadata):
+    # Narrow to a specific datset
+    dataset_name = "GSE48023.SDY1276"
+    # Filter data
+    name_mask = datasets[dataset_col] == dataset_name
+    dataset = datasets.loc[name_mask].reset_index(drop=True)
+
+    # Filter metadata
+    name_mask = metadata[dataset_col] == dataset_name
+    metadata = metadata.loc[name_mask].reset_index(drop=True)
+
+    day = [x for x in metadata["Days"].iloc[0] if "D0" not in x][0]
+    day0 = [x for x in metadata["Days"].iloc[0] if "D0" in x][0]
+
+    strains = dataset.loc[dataset[day_col] == day][strain_col].unique()
+    print(strains)
+    if len(strains) > 1:
+        # "Influenza" denotes an MFC calculation in the original dataset
+        strains = list(set(strains) - set(["Influenza"]))
+        # Sort to maintain consistency (sorts in-place)
+        strains.sort()
+    if len(strains) < 1:
+        strains = ['single strain - missing data']
+
+    strain_index = 0
+    P = {
+        "bAdjustMFC": bAdjustMFC,
+        "dataset_name": dataset_name,
+        "strain_index": strain_index,
+        "day":  day,
+        "day0":  day0,
+        "strain": strains[strain_index],
+        "strains": strains,
+        "bPlotOnly": False,
+        "bPlotThreshold": False,
+    }
+    return analyze_dataset(dataset, P)
