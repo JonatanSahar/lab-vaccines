@@ -464,6 +464,7 @@ def analyze_dataset(dataset, P):
     proba = pd.DataFrame(log_regress_combined.predict_proba(data[[immage_col, age_col]]))
     data[non_responder_col_combined] = proba[1]
 
+
     # #### Thresholding based on logistic regression probabilties
     # #### IMMAGE-based classification
     # Run for immage and age to compare
