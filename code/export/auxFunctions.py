@@ -38,6 +38,8 @@ from constants import *
 import papermill as pm
 import shutil
 
+from IPython.display import Markdown as md
+
 # Change the current working directory
 os.chdir("/home/yonatan/Documents/projects/vaccines/code")
 
@@ -101,13 +103,14 @@ def plot_response(data, dataset_name, strain, features=""):
     custom_palette = {"Non-Responders": "orange", "Responders": "#3498db"}
     if len(features) == 1:
         col_name = features[0]
-        # Plot sorted feature values vs Index on the second subplot
         sorted_data = data.sort_values(col_name, ignore_index=True).reset_index()
         sns.scatterplot(
             data=sorted_data, x="index", y=col_name, hue="Label text", palette=custom_palette
         )
 
-        plt.set_title(f"Sorted {col_name} vs Index")
+        plt.title(f"Sorted {col_name} vs Index")
+        plt.tight_layout()  # Adjusts subplot params so that subplots fit into the figure area.
+        plt.show()
 
     if len(features) == 2:
         fig, axs = plt.subplots(
@@ -117,7 +120,7 @@ def plot_response(data, dataset_name, strain, features=""):
         col_name_2 = features[1]
 
         sorted_data = data.sort_values(col_name_1, ignore_index=True).reset_index()
-        sns.scatterplot(
+        scatter_1 = sns.scatterplot(
             ax=axs[0],
             data=sorted_data,
             x="index",
@@ -126,21 +129,25 @@ def plot_response(data, dataset_name, strain, features=""):
             palette=custom_palette,
         )
         axs[0].set_title(f"Sorted {col_name_1} vs Index")
+        axs[0].get_legend().remove()  # Removes the legend
 
         sorted_data = data.sort_values(col_name_2, ignore_index=True).reset_index()
-        sns.scatterplot(
+        scatter_2 = sns.scatterplot(
             ax=axs[1],
             data=sorted_data,
             x="index",
             y=col_name_2,
             hue="Label text",
             palette=custom_palette,
+            legend=False,  # turns off individual legend
         )
         axs[1].set_title(f"Sorted {col_name_2} vs Index")
 
-    fig.suptitle(f"Response distribution: {dataset_name} {strain}")
-    plt.tight_layout()  # Adjusts subplot params so that subplots fit into the figure area.
-    plt.show()
+        handles, labels = scatter_1.get_legend_handles_labels()
+        fig.legend(handles, labels, loc="center right", bbox_to_anchor=(1.2, 0.5))
+        fig.suptitle(f"Response distribution: {dataset_name} {strain}")
+        plt.tight_layout()  # Adjusts subplot params so that subplots fit into the figure area.
+        plt.show()
 
 
 def plot_desicion_threshold(
@@ -157,7 +164,7 @@ def plot_desicion_threshold(
     features="",
 ):
     fig, axs = plt.subplots(
-        1, 2, figsize=(16, 6)
+        1, 2, figsize=(10, 4)
     )  # Creates a figure with two side-by-side subplots
 
     naive_classification_precision = data["y"].mean()
@@ -332,7 +339,7 @@ def preprocess_dataset(dataset, P):
     cluster_col = day0
     data = pd.DataFrame()
     if bAdjustMFC:
-        print("Preprocessing dataset, computing adjusted FC")
+        # print("Preprocessing dataset, computing adjusted FC")
         metadata = pd.DataFrame(dataset_day_dicts_for_adjFC)
         days = metadata[metadata[dataset_col] == dataset_name]["Days"].iloc[0]
         sampleDay = [x for x in days if "D0" not in x][0]
@@ -421,9 +428,11 @@ def analyze_dataset(dataset, P):
 
     #### Dataset & Strain info
     age_restrict_str = f", Subjects over the age of {age_threshold}" if bOlderOnly else ""
-    day_str = "Adjusted MFC" if bAdjustMFC else f"day: {day}"
+    adjFC_str = ", using adjusted FC" if bAdjustMFC else ""
 
-    # print(f"""### Analysis for dataset: {dataset_name}, strain: {strain}, {day_str}{age_restrict_str}""")
+    md(
+        f"### Analysis for dataset: {dataset_name}, strain: {strain}, day: {day}{age_restrict_str}{adjFC_str}"
+    )
 
     data.reset_index(inplace=True, drop=True)
 
@@ -565,6 +574,14 @@ def analyze_dataset(dataset, P):
     ].mean(axis=1)
     # print(summary.to_string(index=False))
 
+    summary["Max difference"] = summary.apply(
+        lambda row: max(
+            row["Composite", "IMMAGE"] - row["Composite", "Age"],
+            row["Composite", "Multivariate"] - row["Composite", "Age"],
+        ),
+        axis=1,
+    )
+
     return summary
 
 
@@ -584,19 +601,24 @@ def get_strains(dataset, day):
 # %%
 def analyze_all_datasets(datasets, metadata, bPlotOnly=False, bPlotThreshold=False):
     accumulated_results = pd.DataFrame()
+    if bPlotOnly:
+        bAdjustMFC_list = [False]
+    else:
+        bAdjustMFC_list = [True, False]
     for dataset_name in metadata[dataset_col].unique():
         curr_metadata = metadata.loc[metadata[dataset_col] == dataset_name]
         dataset = datasets.loc[datasets[dataset_col] == dataset_name]
-        print(dataset_name)
         day = [x for x in curr_metadata["Days"].iloc[0] if "D0" not in x][0]
         strains = get_strains(dataset, day)
-        print(strains)
         for strain_index in range(len(strains)):
             strain_name = strains[strain_index].replace("/", "_").replace(" ", "_")
             # print(f'exporting {dataset_name}, strain no. {strain_index}: {strain_name}, day: {day}')
             # Define parameters for curr_metadata and strain
-            day0 = [x for x in curr_metadata["Days"].iloc[0] if "D0" in x][0]
-            for bAdjustMFC in [True, False]:
+            day0_list = [x for x in curr_metadata["Days"].iloc[0] if "D0" in x]
+            if len(day0_list) < 1:
+                break
+            day0 = day0_list[0]
+            for bAdjustMFC in bAdjustMFC_list:
                 P = {
                     "bAdjustMFC": bAdjustMFC,
                     "dataset_name": dataset_name,
@@ -635,10 +657,11 @@ def analyze_all_datasets(datasets, metadata, bPlotOnly=False, bPlotThreshold=Fal
 
     return accumulated_results
 
-#%%
+
+# %%
 def load_data():
     # Read in Data and drop missing values
-    data_dir = af.get_dir_by_name("data")
+    data_dir = get_dir_by_name("data")
     df = pd.read_csv(os.path.join(data_dir, "../data/all_vaccines.csv"))
     datasets = df.dropna(subset=[immage_col, age_col, dataset_col, uid_col, day_col, response_col])
     dataset_names = datasets[dataset_col].unique()
@@ -655,7 +678,9 @@ def load_data():
     elif bNonInfluenza:
         metadata = all_sets_df
         dataset_names = all_sets_df[dataset_col].unique().astype(str)
-        dataset_names = list(set(dataset_names) - set(influenza_df[dataset_col]) - set(exclude_datasets))
+        dataset_names = list(
+            set(dataset_names) - set(influenza_df[dataset_col]) - set(exclude_datasets)
+        )
     else:
         metadata = all_sets_df
         dataset_names = all_sets_df[dataset_col].unique().astype(str)
@@ -664,12 +689,12 @@ def load_data():
     # dataset_names = ["GSE48023.SDY1276"]
     # Filter datasets and metadata according to the list of datasets we want to look at.
     datasets = datasets.loc[datasets["Dataset"].isin(dataset_names)]
-    metadata =  metadata.loc[metadata["Dataset"].isin(dataset_names)]
+    metadata = metadata.loc[metadata["Dataset"].isin(dataset_names)]
     return datasets, metadata
 
-def debug_single_dataset(datasets, metadata):
+
+def debug_single_dataset(datasets, metadata, dataset_name="GSE48023.SDY1276", strain_index=0):
     # Narrow to a specific datset
-    dataset_name = "GSE48023.SDY1276"
     # Filter data
     name_mask = datasets[dataset_col] == dataset_name
     dataset = datasets.loc[name_mask].reset_index(drop=True)
@@ -681,26 +706,51 @@ def debug_single_dataset(datasets, metadata):
     day = [x for x in metadata["Days"].iloc[0] if "D0" not in x][0]
     day0 = [x for x in metadata["Days"].iloc[0] if "D0" in x][0]
 
-    strains = dataset.loc[dataset[day_col] == day][strain_col].unique()
-    print(strains)
-    if len(strains) > 1:
-        # "Influenza" denotes an MFC calculation in the original dataset
-        strains = list(set(strains) - set(["Influenza"]))
-        # Sort to maintain consistency (sorts in-place)
-        strains.sort()
-    if len(strains) < 1:
-        strains = ['single strain - missing data']
+    strains = get_strains(dataset, day)
 
-    strain_index = 0
     P = {
         "bAdjustMFC": bAdjustMFC,
         "dataset_name": dataset_name,
         "strain_index": strain_index,
-        "day":  day,
-        "day0":  day0,
+        "day": day,
+        "day0": day0,
         "strain": strains[strain_index],
         "strains": strains,
         "bPlotOnly": False,
         "bPlotThreshold": False,
     }
     return analyze_dataset(dataset, P)
+
+
+def run_single_dataset(datasets, metadata, params):
+    # Narrow to a specific datset
+    # Filter data
+    name_mask = datasets[dataset_col] == params["dataset_name"]
+    dataset = datasets.loc[name_mask].reset_index(drop=True)
+
+    # Filter metadata
+    name_mask = metadata[dataset_col] == params["dataset_name"]
+    metadata = metadata.loc[name_mask].reset_index(drop=True)
+
+    day0 = [x for x in metadata["Days"].iloc[0] if "D0" in x][0]
+
+    strains = get_strains(dataset, params["day"])
+
+    P = {
+        "bAdjustMFC": params["bAdjustMFC"],
+        "dataset_name": params["dataset_name"],
+        "strain_index": params["strain_index"],
+        "day": params["day"],
+        "day0": day0,
+        "strain": strains[params["strain_index"]],
+        "strains": strains,
+        "bPlotOnly": False,
+        "bPlotThreshold": True,
+    }
+    return analyze_dataset(dataset, P)
+
+
+def save_and_show_plot(filename, dpi=300):
+    plt.tight_layout()
+    plt.savefig(filename, dpi=dpi)
+    plt.show()

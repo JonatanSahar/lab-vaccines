@@ -156,3 +156,4 @@ HAI_threshold = 40
 age_restrict_str = f"_older-only" if bOlderOnly else ""
 seroprotected_str = f"_discard_seroprotected" if bDiscardSeroprotected else ""
 adjFC_str = f"_adjFC" if bAdjustMFC else ""
+influenza_str = f"_influenza_only" if bInfluenza else ""
