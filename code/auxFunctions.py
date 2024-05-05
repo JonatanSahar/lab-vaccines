@@ -25,7 +25,7 @@ from sklearn.model_selection import train_test_split, cross_validate, Randomized
 from sklearn.metrics import accuracy_score
 from scipy.stats import randint, ttest_ind
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import auc, roc_auc_score, precision_recall_curve
+from sklearn.metrics import auc, roc_auc_score, precision_recall_curve, roc_curve
 from sklearn.cluster import KMeans
 from math import log
 
@@ -59,7 +59,6 @@ def get_dir_by_name(dir_name):
         print(f"Directory {dir_name} not found in the parent directories.")
         raise (Exception())
 
-
 def remove_duplicate_accessions(dataset, immage_col, uid_col):
     """Sometimes there are multiple geo_accession numbers, like in GSE48018.SDY1276.
     Average the IMMAGE, since all else is the same"""
@@ -79,10 +78,8 @@ def remove_duplicate_accessions(dataset, immage_col, uid_col):
 
     return dataset
 
-
 def get_threshold_from_probability(prob, intercept, slope):
     return -1 * (log(1 / prob - 1) + intercept) / slope
-
 
 def plot_response(data, dataset_name, strain, features=""):
     """
@@ -149,11 +146,10 @@ def plot_response(data, dataset_name, strain, features=""):
         plt.tight_layout()  # Adjusts subplot params so that subplots fit into the figure area.
         plt.show()
 
-
 def plot_desicion_threshold_ROC(
     data,
-    precision,
-    recall,
+    fpr,
+    tpr,
     prob_column,
     optimal_idx,
     feature_threshold,
@@ -169,17 +165,17 @@ def plot_desicion_threshold_ROC(
 
     naive_classification_precision = data["y"].mean()
 
-    # Plot PRC on the first subplot
+    # Plot ROC on the first subplot
     axs[0].plot(
-        recall, precision, label=f"Precision-Recall curve (area = {AUC : 0.2f})", color="#9b59b6"
+        fpr, tpr, label=f"ROC curve (area = {AUC : 0.2f})", color="#9b59b6"
     )
-    axs[0].axhline(y=naive_classification_precision, color="black", linestyle="--")
-    axs[0].plot(recall[optimal_idx], precision[optimal_idx], marker="o", markersize=5, color="red")
+    axs[0].plot([0, 1], [0, 1], color="black", linestyle="--")
+    axs[0].plot(fpr[optimal_idx], tpr[optimal_idx], marker="o", markersize=5, color="red")
     axs[0].set_xlim([0.0, 1.0])
     axs[0].set_ylim([0.0, 1.05])
-    axs[0].set_xlabel("Recall")
-    axs[0].set_ylabel("Precision")
-    axs[0].set_title("Precision-Recall curve")
+    axs[0].set_xlabel("fpr")
+    axs[0].set_ylabel("tpr")
+    axs[0].set_title("ROC curve")
     axs[0].legend(loc="lower right")
 
     custom_palette = {"Non-Responders": "orange", "Responders": "#3498db"}
@@ -221,7 +217,7 @@ def plot_desicion_threshold_ROC(
         )
         axs[1].set_title(f"IMMAGE and Age, X=predicted non-responder")
 
-    fig.suptitle(f"Probability-based threshold with PRC\n{dataset_name} {strain}")
+    fig.suptitle(f"Probability-based threshold with ROC\n{dataset_name} {strain}")
     plt.tight_layout()  # Adjusts subplot params so that subplots fit into the figure area.
     plt.show()
 
@@ -303,31 +299,29 @@ def plot_desicion_threshold_PRC(
 def calc_and_plot_threshold_ROC(
     data,
     classifier,
-    precision,
-    recall,
-    thresholds,
     prob_column,
     dataset_name,
     strain,
     bPlotThreshold,
     features=[],
 ):
-    precision, recall, thresholds = precision_recall_curve(data["y"], data[prob_column])
-    AUC = auc(recall, precision)
+
+
+    fpr, tpr, thresholds = roc_curve(data["y"], data[prob_column])
+    AUC = auc(fpr, tpr)
     intercept = classifier.intercept_[0]
     slope = classifier.coef_[0][0]
 
-    naive_classification_precision = data["y"].mean()
-
-    # Identifying the optimal threshold (maximal F1 score)
-    beta = 0.7
-    a = (1 + pow(beta, 2)) * (precision * recall)
-    b = pow(beta, 2) * precision + recall
-    b = np.where((b == 0) | np.isnan(b), np.nan, b)
-    F_scores = np.divide(a, b)
-    optimal_idx = np.nanargmax(F_scores)
+    # Identifying the optimal threshold (using Youden’s Index)
+    optimal_idx = np.argmax(tpr - fpr)
     prob_threshold = thresholds[optimal_idx]
-    score = F_scores[optimal_idx]
+
+    # Calculate the cutoff value
+    feature_threshold = get_threshold_from_probability(
+        prob_threshold, intercept=intercept, slope=slope
+    )
+
+    score = np.max(tpr-fpr)
 
     # Calculate the cutoff value
     feature_threshold = get_threshold_from_probability(
@@ -337,8 +331,8 @@ def calc_and_plot_threshold_ROC(
     if bPlotThreshold:
         plot_desicion_threshold_ROC(
             data,
-            precision,
-            recall,
+            fpr,
+            tpr,
             prob_column,
             optimal_idx,
             feature_threshold,
@@ -402,7 +396,6 @@ def calc_and_plot_threshold_PRC(
 
     return (score, prob_threshold, feature_threshold, AUC)
 
-
 def get_classifier_stats(data, column, threshold):
     # Global measures (entire dataset)
     optimal_prediction = data[column].apply(lambda x: 1 if x >= threshold else 0)
@@ -414,7 +407,6 @@ def get_classifier_stats(data, column, threshold):
     y_under_thr = data.loc[data[column] < threshold, ["y"]]
     non_response_rate_under_thr = y_under_thr.mean().y
     return non_response_rate_over_thr, non_response_rate_under_thr
-
 
 def preprocess_dataset(dataset, P):
     dataset_name = P["dataset_name"]
@@ -602,13 +594,9 @@ def analyze_dataset(dataset, P):
     # #### IMMAGE-based classification
     # Run for immage and age to compare
     # IMMAGE
-    precision, recall, thresholds = precision_recall_curve(data["y"], data[non_responder_col])
-    immage_score, threshold, immage_threshold, immage_auc = calc_and_plot_threshold_PRC(
+    immage_score, threshold, immage_threshold, immage_auc = calc_and_plot_threshold_ROC(
         data,
         log_regress_immage,
-        precision,
-        recall,
-        thresholds,
         non_responder_col,
         dataset_name,
         strain,
@@ -624,13 +612,9 @@ def analyze_dataset(dataset, P):
 
     # #### Age-based classification
     # Age
-    precision, recall, thresholds = precision_recall_curve(data["y"], data[non_responder_col_age])
-    age_score, prob_threshold_age, age_threshold, age_auc = calc_and_plot_threshold_PRC(
+    age_score, prob_threshold_age, age_threshold, age_auc = calc_and_plot_threshold_ROC(
         data,
         log_regress_age,
-        precision,
-        recall,
-        thresholds,
         non_responder_col_age,
         dataset_name,
         strain,
@@ -646,15 +630,9 @@ def analyze_dataset(dataset, P):
 
     # #### Age & IMMAGE combined
     # Combined
-    precision, recall, thresholds = precision_recall_curve(
-        data["y"], data[non_responder_col_combined]
-    )
-    combined_score, prob_threshold_combined, _, combined_auc = calc_and_plot_threshold_PRC(
+    combined_score, prob_threshold_combined, _, combined_auc = calc_and_plot_threshold_ROC(
         data,
         log_regress_combined,
-        precision,
-        recall,
-        thresholds,
         non_responder_col_combined,
         dataset_name,
         strain,

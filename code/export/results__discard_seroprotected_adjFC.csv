@@ -1,5 +1,0 @@
-Dataset,Strain,strain_index,Day,max_difference,"('Composite', 'IMMAGE')","('Composite', 'Age')","('Composite', 'Multivariate')",html_path
-GSE48023.SDY1276,B_Florida_4_2006,2,HAI.D14,0.17,0.33,0.22,0.40,"=HYPERLINK(""file:///home/yonatan/Documents/projects/vaccines/code/export/GSE48023.SDY1276_B_Florida_4_2006_HAI.D14_discard_seroprotected.html"", ""Link"")"
-GSE48023.SDY1276,A_Brisbane_10_2007,0,HAI.D14,0.15,0.56,0.41,0.54,"=HYPERLINK(""file:///home/yonatan/Documents/projects/vaccines/code/export/GSE48023.SDY1276_A_Brisbane_10_2007_HAI.D14_discard_seroprotected.html"", ""Link"")"
-GSE48023.SDY1276,A_Brisbane_10_2007,0,HAI.D14,0.15,0.54,0.39,0.51,"=HYPERLINK(""file:///home/yonatan/Documents/projects/vaccines/code/export/GSE48023.SDY1276_A_Brisbane_10_2007_HAI.D14_discard_seroprotected.html"", ""Link"")"
-GSE48023.SDY1276,B_Florida_4_2006,2,HAI.D14,0.10,0.43,0.42,0.52,"=HYPERLINK(""file:///home/yonatan/Documents/projects/vaccines/code/export/GSE48023.SDY1276_B_Florida_4_2006_HAI.D14_discard_seroprotected.html"", ""Link"")"

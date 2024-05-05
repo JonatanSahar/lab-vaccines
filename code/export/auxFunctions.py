@@ -25,7 +25,7 @@ from sklearn.model_selection import train_test_split, cross_validate, Randomized
 from sklearn.metrics import accuracy_score
 from scipy.stats import randint, ttest_ind
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import auc, roc_auc_score, precision_recall_curve
+from sklearn.metrics import auc, roc_auc_score, precision_recall_curve, roc_curve
 from sklearn.cluster import KMeans
 from math import log
 
@@ -59,7 +59,6 @@ def get_dir_by_name(dir_name):
         print(f"Directory {dir_name} not found in the parent directories.")
         raise (Exception())
 
-
 def remove_duplicate_accessions(dataset, immage_col, uid_col):
     """Sometimes there are multiple geo_accession numbers, like in GSE48018.SDY1276.
     Average the IMMAGE, since all else is the same"""
@@ -79,10 +78,8 @@ def remove_duplicate_accessions(dataset, immage_col, uid_col):
 
     return dataset
 
-
 def get_threshold_from_probability(prob, intercept, slope):
     return -1 * (log(1 / prob - 1) + intercept) / slope
-
 
 def plot_response(data, dataset_name, strain, features=""):
     """
@@ -149,8 +146,82 @@ def plot_response(data, dataset_name, strain, features=""):
         plt.tight_layout()  # Adjusts subplot params so that subplots fit into the figure area.
         plt.show()
 
+def plot_desicion_threshold_ROC(
+    data,
+    fpr,
+    tpr,
+    prob_column,
+    optimal_idx,
+    feature_threshold,
+    prob_threshold,
+    AUC,
+    dataset_name,
+    strain,
+    features="",
+):
+    fig, axs = plt.subplots(
+        1, 2, figsize=(10, 4)
+    )  # Creates a figure with two side-by-side subplots
 
-def plot_desicion_threshold(
+    naive_classification_precision = data["y"].mean()
+
+    # Plot ROC on the first subplot
+    axs[0].plot(
+        fpr, tpr, label=f"ROC curve (area = {AUC : 0.2f})", color="#9b59b6"
+    )
+    axs[0].plot([0, 1], [0, 1], color="black", linestyle="--")
+    axs[0].plot(fpr[optimal_idx], tpr[optimal_idx], marker="o", markersize=5, color="red")
+    axs[0].set_xlim([0.0, 1.0])
+    axs[0].set_ylim([0.0, 1.05])
+    axs[0].set_xlabel("fpr")
+    axs[0].set_ylabel("tpr")
+    axs[0].set_title("ROC curve")
+    axs[0].legend(loc="lower right")
+
+    custom_palette = {"Non-Responders": "orange", "Responders": "#3498db"}
+
+    if len(features) == 1:
+        col_name = features[0]
+        # Plot sorted feature values vs Index on the second subplot
+        sorted_data = data.sort_values(col_name, ignore_index=True).reset_index()
+        sns.scatterplot(
+            ax=axs[1],
+            data=sorted_data,
+            x="index",
+            y=col_name,
+            hue="Label text",
+            palette=custom_palette,
+        )
+        axs[1].axhline(y=feature_threshold, color="black", linestyle="--")
+        axs[1].set_title(f"Sorted {col_name} vs Index")
+    else:  # len(features) > 1
+        predicted_true = data.loc[data[prob_column] >= prob_threshold]
+
+        sns.scatterplot(
+            ax=axs[1],
+            data=predicted_true,
+            x=features[0],
+            y=features[1],
+            marker="x",
+            s=100,
+            color="red",
+        )
+
+        sns.scatterplot(
+            ax=axs[1],
+            data=data,
+            x=features[0],
+            y=features[1],
+            hue="Label text",
+            palette=custom_palette,
+        )
+        axs[1].set_title(f"IMMAGE and Age, X=predicted non-responder")
+
+    fig.suptitle(f"Probability-based threshold with ROC\n{dataset_name} {strain}")
+    plt.tight_layout()  # Adjusts subplot params so that subplots fit into the figure area.
+    plt.show()
+
+def plot_desicion_threshold_PRC(
     data,
     precision,
     recall,
@@ -225,8 +296,56 @@ def plot_desicion_threshold(
     plt.tight_layout()  # Adjusts subplot params so that subplots fit into the figure area.
     plt.show()
 
+def calc_and_plot_threshold_ROC(
+    data,
+    classifier,
+    prob_column,
+    dataset_name,
+    strain,
+    bPlotThreshold,
+    features=[],
+):
 
-def calc_and_plot_threshold(
+
+    fpr, tpr, thresholds = roc_curve(data["y"], data[prob_column])
+    AUC = auc(fpr, tpr)
+    intercept = classifier.intercept_[0]
+    slope = classifier.coef_[0][0]
+
+    # Identifying the optimal threshold (using Youden’s Index)
+    optimal_idx = np.argmax(tpr - fpr)
+    prob_threshold = thresholds[optimal_idx]
+
+    # Calculate the cutoff value
+    feature_threshold = get_threshold_from_probability(
+        prob_threshold, intercept=intercept, slope=slope
+    )
+
+    score = np.max(tpr-fpr)
+
+    # Calculate the cutoff value
+    feature_threshold = get_threshold_from_probability(
+        prob_threshold, intercept=intercept, slope=slope
+    )
+
+    if bPlotThreshold:
+        plot_desicion_threshold_ROC(
+            data,
+            fpr,
+            tpr,
+            prob_column,
+            optimal_idx,
+            feature_threshold,
+            prob_threshold,
+            AUC,
+            dataset_name,
+            strain,
+            features=features,
+        )
+
+    return (score, prob_threshold, feature_threshold, AUC)
+
+def calc_and_plot_threshold_PRC(
     data,
     classifier,
     precision,
@@ -238,6 +357,7 @@ def calc_and_plot_threshold(
     bPlotThreshold,
     features=[],
 ):
+    precision, recall, thresholds = precision_recall_curve(data["y"], data[prob_column])
     AUC = auc(recall, precision)
     intercept = classifier.intercept_[0]
     slope = classifier.coef_[0][0]
@@ -260,7 +380,7 @@ def calc_and_plot_threshold(
     )
 
     if bPlotThreshold:
-        plot_desicion_threshold(
+        plot_desicion_threshold_PRC(
             data,
             precision,
             recall,
@@ -276,7 +396,6 @@ def calc_and_plot_threshold(
 
     return (score, prob_threshold, feature_threshold, AUC)
 
-
 def get_classifier_stats(data, column, threshold):
     # Global measures (entire dataset)
     optimal_prediction = data[column].apply(lambda x: 1 if x >= threshold else 0)
@@ -288,7 +407,6 @@ def get_classifier_stats(data, column, threshold):
     y_under_thr = data.loc[data[column] < threshold, ["y"]]
     non_response_rate_under_thr = y_under_thr.mean().y
     return non_response_rate_over_thr, non_response_rate_under_thr
-
 
 def preprocess_dataset(dataset, P):
     dataset_name = P["dataset_name"]
@@ -398,7 +516,6 @@ def preprocess_dataset(dataset, P):
 
     return data
 
-
 def analyze_dataset(dataset, P):
     """
     Perform analysis on the dataset based on specified parameters.
@@ -477,13 +594,9 @@ def analyze_dataset(dataset, P):
     # #### IMMAGE-based classification
     # Run for immage and age to compare
     # IMMAGE
-    precision, recall, thresholds = precision_recall_curve(data["y"], data[non_responder_col])
-    immage_score, threshold, immage_threshold, immage_auc = calc_and_plot_threshold(
+    immage_score, threshold, immage_threshold, immage_auc = calc_and_plot_threshold_ROC(
         data,
         log_regress_immage,
-        precision,
-        recall,
-        thresholds,
         non_responder_col,
         dataset_name,
         strain,
@@ -499,13 +612,9 @@ def analyze_dataset(dataset, P):
 
     # #### Age-based classification
     # Age
-    precision, recall, thresholds = precision_recall_curve(data["y"], data[non_responder_col_age])
-    age_score, prob_threshold_age, age_threshold, age_auc = calc_and_plot_threshold(
+    age_score, prob_threshold_age, age_threshold, age_auc = calc_and_plot_threshold_ROC(
         data,
         log_regress_age,
-        precision,
-        recall,
-        thresholds,
         non_responder_col_age,
         dataset_name,
         strain,
@@ -521,15 +630,9 @@ def analyze_dataset(dataset, P):
 
     # #### Age & IMMAGE combined
     # Combined
-    precision, recall, thresholds = precision_recall_curve(
-        data["y"], data[non_responder_col_combined]
-    )
-    combined_score, prob_threshold_combined, _, combined_auc = calc_and_plot_threshold(
+    combined_score, prob_threshold_combined, _, combined_auc = calc_and_plot_threshold_ROC(
         data,
         log_regress_combined,
-        precision,
-        recall,
-        thresholds,
         non_responder_col_combined,
         dataset_name,
         strain,
