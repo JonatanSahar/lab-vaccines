@@ -9,6 +9,9 @@ immage_col = "IMMAGE"
 strain_col = "Strain"
 accesion_col = "geo_accession"
 strain_index_col = "strain_index"
+vaccine_col = "Vaccine"
+
+
 
 # Dataset subsets
 influenza_dicts = [
@@ -148,6 +151,7 @@ bDiscardSeroprotected = True
 bOlderOnly = False
 bInfluenza = False
 bNonInfluenza = False
+bUseROC = True
 
 # Configurations
 age_threshlod = 60
@@ -157,3 +161,5 @@ age_restrict_str = f"_older-only" if bOlderOnly else ""
 seroprotected_str = f"_discard_seroprotected" if bDiscardSeroprotected else ""
 adjFC_str = f"_adjFC" if bAdjustMFC else ""
 influenza_str = f"_influenza_only" if bInfluenza else ""
+
+ROC_PRC_str = "_ROC" if bUseROC else "_PRC"

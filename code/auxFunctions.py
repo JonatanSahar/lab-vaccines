@@ -39,6 +39,7 @@ import papermill as pm
 import shutil
 
 from IPython.display import Markdown as md
+from jupyter_client import find_connection_file
 
 # Change the current working directory
 os.chdir("/home/yonatan/Documents/projects/vaccines/code")
@@ -59,6 +60,7 @@ def get_dir_by_name(dir_name):
         print(f"Directory {dir_name} not found in the parent directories.")
         raise (Exception())
 
+
 def remove_duplicate_accessions(dataset, immage_col, uid_col):
     """Sometimes there are multiple geo_accession numbers, like in GSE48018.SDY1276.
     Average the IMMAGE, since all else is the same"""
@@ -78,8 +80,10 @@ def remove_duplicate_accessions(dataset, immage_col, uid_col):
 
     return dataset
 
+
 def get_threshold_from_probability(prob, intercept, slope):
     return -1 * (log(1 / prob - 1) + intercept) / slope
+
 
 def plot_response(data, dataset_name, strain, features=""):
     """
@@ -146,6 +150,7 @@ def plot_response(data, dataset_name, strain, features=""):
         plt.tight_layout()  # Adjusts subplot params so that subplots fit into the figure area.
         plt.show()
 
+
 def plot_desicion_threshold_ROC(
     data,
     fpr,
@@ -166,9 +171,7 @@ def plot_desicion_threshold_ROC(
     naive_classification_precision = data["y"].mean()
 
     # Plot ROC on the first subplot
-    axs[0].plot(
-        fpr, tpr, label=f"ROC curve (area = {AUC : 0.2f})", color="#9b59b6"
-    )
+    axs[0].plot(fpr, tpr, label=f"ROC curve (area = {AUC : 0.2f})", color="#9b59b6")
     axs[0].plot([0, 1], [0, 1], color="black", linestyle="--")
     axs[0].plot(fpr[optimal_idx], tpr[optimal_idx], marker="o", markersize=5, color="red")
     axs[0].set_xlim([0.0, 1.0])
@@ -220,6 +223,7 @@ def plot_desicion_threshold_ROC(
     fig.suptitle(f"Probability-based threshold with ROC\n{dataset_name} {strain}")
     plt.tight_layout()  # Adjusts subplot params so that subplots fit into the figure area.
     plt.show()
+
 
 def plot_desicion_threshold_PRC(
     data,
@@ -296,6 +300,7 @@ def plot_desicion_threshold_PRC(
     plt.tight_layout()  # Adjusts subplot params so that subplots fit into the figure area.
     plt.show()
 
+
 def calc_and_plot_threshold_ROC(
     data,
     classifier,
@@ -305,7 +310,6 @@ def calc_and_plot_threshold_ROC(
     bPlotThreshold,
     features=[],
 ):
-
 
     fpr, tpr, thresholds = roc_curve(data["y"], data[prob_column])
     AUC = auc(fpr, tpr)
@@ -321,7 +325,7 @@ def calc_and_plot_threshold_ROC(
         prob_threshold, intercept=intercept, slope=slope
     )
 
-    score = np.max(tpr-fpr)
+    score = np.max(tpr - fpr)
 
     # Calculate the cutoff value
     feature_threshold = get_threshold_from_probability(
@@ -345,18 +349,17 @@ def calc_and_plot_threshold_ROC(
 
     return (score, prob_threshold, feature_threshold, AUC)
 
+
 def calc_and_plot_threshold_PRC(
     data,
     classifier,
-    precision,
-    recall,
-    thresholds,
     prob_column,
     dataset_name,
     strain,
     bPlotThreshold,
     features=[],
 ):
+
     precision, recall, thresholds = precision_recall_curve(data["y"], data[prob_column])
     AUC = auc(recall, precision)
     intercept = classifier.intercept_[0]
@@ -396,6 +399,7 @@ def calc_and_plot_threshold_PRC(
 
     return (score, prob_threshold, feature_threshold, AUC)
 
+
 def get_classifier_stats(data, column, threshold):
     # Global measures (entire dataset)
     optimal_prediction = data[column].apply(lambda x: 1 if x >= threshold else 0)
@@ -407,6 +411,7 @@ def get_classifier_stats(data, column, threshold):
     y_under_thr = data.loc[data[column] < threshold, ["y"]]
     non_response_rate_under_thr = y_under_thr.mean().y
     return non_response_rate_over_thr, non_response_rate_under_thr
+
 
 def preprocess_dataset(dataset, P):
     dataset_name = P["dataset_name"]
@@ -516,6 +521,7 @@ def preprocess_dataset(dataset, P):
 
     return data
 
+
 def analyze_dataset(dataset, P):
     """
     Perform analysis on the dataset based on specified parameters.
@@ -536,6 +542,9 @@ def analyze_dataset(dataset, P):
     strain = P["strain"]
     bPlotOnly = P["bPlotOnly"]
     bPlotThreshold = P["bPlotThreshold"]
+
+    bUseROC = True
+    ROC_PRC_str = "_ROC" if bUseROC else "_PRC"
 
     try:
         data = preprocess_dataset(dataset, P)
@@ -593,8 +602,11 @@ def analyze_dataset(dataset, P):
     # #### Thresholding based on logistic regression probabilties
     # #### IMMAGE-based classification
     # Run for immage and age to compare
+
+    funcPtr = calc_and_plot_threshold_ROC if bUseROC else calc_and_plot_threshold_PRC
+
     # IMMAGE
-    immage_score, threshold, immage_threshold, immage_auc = calc_and_plot_threshold_ROC(
+    immage_score, threshold, immage_threshold, immage_auc = funcPtr(
         data,
         log_regress_immage,
         non_responder_col,
@@ -645,9 +657,9 @@ def analyze_dataset(dataset, P):
 
     # #### Comparison of using the different features
     summary_dict = {
-        ("F score", "IMMAGE"): [immage_score],
-        ("F score", "Age"): [age_score],
-        ("F score", "Multivariate"): [combined_score],
+        ("Score", "IMMAGE"): [immage_score],
+        ("Score", "Age"): [age_score],
+        ("Score", "Multivariate"): [combined_score],
         ("NR rate over threshold", "IMMAGE"): [non_response_rate_over_thr],
         ("NR rate over threshold", "Age"): [age_non_response_rate_over_thr],
         ("NR rate over threshold", "Multivariate"): [combined_non_response_rate_over_thr],
@@ -659,7 +671,7 @@ def analyze_dataset(dataset, P):
     # Create a MultiIndex
     multi_index = pd.MultiIndex.from_product(
         [
-            ["F score", "NR rate over threshold", "NR rate under threshold"],
+            ["Score", "NR rate over threshold", "NR rate under threshold"],
             ["IMMAGE", "Age", "Multivariate"],
         ]
     )
@@ -667,13 +679,13 @@ def analyze_dataset(dataset, P):
     # Create the DataFrame
     summary = pd.DataFrame(summary_dict, columns=multi_index)
     summary["Composite", "IMMAGE"] = summary[
-        [("F score", "IMMAGE"), ("NR rate over threshold", "IMMAGE")]
+        [("Score", "IMMAGE"), ("NR rate over threshold", "IMMAGE")]
     ].mean(axis=1)
     summary["Composite", "Age"] = summary[
-        [("F score", "Age"), ("NR rate over threshold", "Age")]
+        [("Score", "Age"), ("NR rate over threshold", "Age")]
     ].mean(axis=1)
     summary["Composite", "Multivariate"] = summary[
-        [("F score", "Multivariate"), ("NR rate over threshold", "Multivariate")]
+        [("Score", "Multivariate"), ("NR rate over threshold", "Multivariate")]
     ].mean(axis=1)
     # print(summary.to_string(index=False))
 
@@ -740,6 +752,7 @@ def analyze_all_datasets(datasets, metadata, bPlotOnly=False, bPlotThreshold=Fal
                         strain_index_col: strain_index,
                         day_col: day,
                         "bAdjustMFC": bAdjustMFC,
+                        vaccine_col: dataset[vaccine_col].unique()[0],
                     }
                     if bPlotOnly:
                         analyze_dataset(dataset, P)
@@ -766,7 +779,7 @@ def load_data():
     # Read in Data and drop missing values
     data_dir = get_dir_by_name("data")
     df = pd.read_csv(os.path.join(data_dir, "../data/all_vaccines.csv"))
-    datasets = df.dropna(subset=[immage_col, age_col, dataset_col, uid_col, day_col, response_col])
+    datasets = df.dropna(subset=[immage_col, age_col, dataset_col, uid_col, day_col, response_col, vaccine_col])
     dataset_names = datasets[dataset_col].unique()
     # Get the info for all influenza datasets, excluding some.
     influenza_df = pd.DataFrame(influenza_dicts)
@@ -857,3 +870,20 @@ def save_and_show_plot(filename, dpi=300):
     plt.tight_layout()
     plt.savefig(filename, dpi=dpi)
     plt.show()
+
+
+def get_param_strings(bOlderOnly, bInfluenza, bNonInfluenza):
+    age_str = f", subjects over the age of {age_threshlod}" if bOlderOnly else ""
+
+    if bInfluenza:
+        influenza_str = "influenza datasets only, "
+    elif bNonInfluenza:
+        influenza_str = "non-influenza datasets only, "
+    else:
+        influenza_str = ""
+
+    return age_str, influenza_str
+
+def print_kernel_file():
+    connection_file = find_connection_file()
+    print(connection_file)
