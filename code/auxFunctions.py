@@ -753,7 +753,9 @@ def analyze_all_datasets(datasets, metadata, bPlotOnly=False, bPlotThreshold=Fal
                         day_col: day,
                         "bAdjustMFC": bAdjustMFC,
                         vaccine_col: dataset[vaccine_col].unique()[0],
+                        "Virus": dataset["Virus"].unique()[0],
                     }
+
                     if bPlotOnly:
                         analyze_dataset(dataset, P)
                     else:
@@ -779,7 +781,9 @@ def load_data():
     # Read in Data and drop missing values
     data_dir = get_dir_by_name("data")
     df = pd.read_csv(os.path.join(data_dir, "../data/all_vaccines.csv"))
-    datasets = df.dropna(subset=[immage_col, age_col, dataset_col, uid_col, day_col, response_col, vaccine_col])
+    datasets = df.dropna(
+        subset=[immage_col, age_col, dataset_col, uid_col, day_col, response_col, vaccine_col]
+    )
     dataset_names = datasets[dataset_col].unique()
     # Get the info for all influenza datasets, excluding some.
     influenza_df = pd.DataFrame(influenza_dicts)
@@ -883,6 +887,7 @@ def get_param_strings(bOlderOnly, bInfluenza, bNonInfluenza):
         influenza_str = ""
 
     return age_str, influenza_str
+
 
 def print_kernel_file():
     connection_file = find_connection_file()
